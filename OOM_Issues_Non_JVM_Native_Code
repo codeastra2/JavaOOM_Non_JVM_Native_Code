@@ -1,0 +1,34 @@
+Author: srinivas1996kumar@gmail.com
+
+
+We will be using JEMalloc, JeProf for tracking the increase in the memory in Non JVM Native code.
+
+Useful References
+
+https://technology.blog.gov.uk/2015/12/11/using-jemalloc-to-get-to-the-bottom-of-a-memory-leak/
+
+https://blogs.oracle.com/poonam/troubleshooting-native-memory-leaks-in-java-applications
+https://www.gnu.org/software/libc/manual/html_node/Malloc-Tunable-Parameters.html
+
+
+Setting up dependencies
+Add the required mirror: sudo yum-config-manager --add-repo=http://mirror.centos.org/centos/7/os/x86_64/
+Vim into the file: sudo vi /etc/yum.repos.d/mirror.centos.org_centos_7_os_x86_64_.repo 
+Add the following line: gpgkey=http://mirror.centos.org/centos/7/os/x86_64/RPM-GPG-KEY-CentOS-7 gpgcheck=1
+For installing gcc: sudo yum update && sudo yum group install "Development Tools"
+Downloading jemalloc: wget https://github.com/jemalloc/jemalloc/releases/download/5.2.0/jemalloc-5.2.0.tar.bz2
+Un-tar and enter directory: tar -xvf jemalloc-5.2.0.tar.bz2 && cd jemalloc-5.2.0.tar.bz2
+Enable profiling: ./configure --enable-prof
+Installing Jemalloc,Jeprof: make && sudo make install
+Installation of visulization tools: sudo yum install ghostscript (For getting result in PDF format)
+
+
+Configuring and using Jemalloc
+Adding env variables, before starting the java process: 
+os.environ["MALLOC_CONF"]="prof:true,lg_prof_interval:26,lg_prof_sample:17"
+os.environ["LD_PRELOAD"]="/usr/local/lib/libjemalloc.so"
+So in the above variable prof_interval:26 states that we want a dump of the malloc allocations every 2^26 bytes, i.e 67MB. Please see the malloc parameters doc link above for the various parameters.
+Setting in this file which starts off the java process ensures that these env variables are set for lifespan of the JVM. 
+Now start the Java service
+Based on the path where the above command was executed(ex: /home/your_dir) the dumps should come in the format jeprof.218449.4.i4.heap  (in /home/your_dir/jeprof.<pid>.<nth 67MB allocation>.i<nth 67MB allocation>.heap).
+Now to convert this to pdf format: jeprof --show_bytes --pdf  /usr/lib/jvm/jre-1.8.0/bin/java jeprof.218449.4.i4.heap > mypdf.pdf
