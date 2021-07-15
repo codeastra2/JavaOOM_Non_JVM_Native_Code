@@ -1,1 +1,1 @@
-"# Script and Steps to debug OOM issues in non JVM Native Code" 
+Script and Steps to debug OOM issues in non JVM Native Code
